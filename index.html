@@ -1,151 +1,30 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Routenplanung</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <style>
-    :root{--bg:#f4f6f8;--card:#fff;--text:#1f2937;--muted:#64748b;--accent:#2563eb;--border:#dbe2ea}
-    *{box-sizing:border-box} body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
-    header{background:#111827;color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center}
-    header h1{margin:0;font-size:22px}.version{font-size:13px;background:#374151;padding:6px 10px;border-radius:999px}
-    main{max-width:1500px;margin:0 auto;padding:20px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:0 2px 10px rgba(15,23,42,.05)}
-    .card h2{margin:0 0 14px;font-size:18px}.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    label{display:block;font-size:13px;font-weight:700;margin-bottom:6px;color:#334155}
-    input,button{font:inherit} input[type=text],input[type=time],input[type=number],input[type=file]{width:100%;padding:10px 11px;border:1px solid var(--border);border-radius:9px;background:#fff}
-    button{border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer}.primary{background:var(--accent);color:#fff}.secondary{background:#e2e8f0;color:#1e293b}
-    button:disabled{opacity:.45;cursor:not-allowed}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
-    #map{height:410px;border-radius:12px;background:#e5e7eb}.status{margin-top:10px;color:var(--muted);font-size:13px}
-    .full{grid-column:1/-1}.table-wrap{overflow:auto;max-height:460px;border:1px solid var(--border);border-radius:10px}
-    table{width:100%;border-collapse:collapse;min-width:760px}th,td{padding:10px 12px;border-bottom:1px solid #edf1f5;text-align:left;font-size:14px}
-    th{position:sticky;top:0;background:#f8fafc;z-index:1}.center{text-align:center}.empty{padding:28px;text-align:center;color:var(--muted)}
-    .summary{display:flex;gap:18px;flex-wrap:wrap;margin:12px 0;color:#475569;font-size:14px}.warn{color:#b45309}
-    @media(max-width:900px){.grid,.field-grid{grid-template-columns:1fr}.full{grid-column:auto}}
-  </style>
-</head>
-<body>
-<header><h1>Routenplanung</h1><span class="version">v0.1</span></header>
-<main>
-  <div class="grid">
-    <section class="card">
-      <h2>1. Import</h2>
-      <label for="fileInput">Excel / CSV Datei</label>
-      <input id="fileInput" type="file" accept=".xlsx,.xls,.csv" />
-      <div class="status" id="importStatus">Noch keine Datei geladen.</div>
-    </section>
-
-    <section class="card">
-      <h2>2. Planung</h2>
-      <div class="field-grid">
-        <div><label for="startDepot">Depot Start</label><input id="startDepot" type="text" placeholder="Straße Nr., PLZ Ort"></div>
-        <div><label for="endDepot">Depot Ende</label><input id="endDepot" type="text" placeholder="Straße Nr., PLZ Ort"></div>
-        <div><label for="startTime">Startzeit</label><input id="startTime" type="time" value="07:00"></div>
-        <div><label for="stopMinutes">Stoppzeit je Standort (Min.)</label><input id="stopMinutes" type="number" min="0" step="5" value="20"></div>
-      </div>
-      <div class="actions">
-        <button class="primary" id="planBtn" disabled>Route planen</button>
-        <button class="secondary" id="replanBtn" disabled>Route neu planen</button>
-        <button class="secondary" id="exportBtn" disabled>Excel erstellen</button>
-      </div>
-      <div class="status">Routenoptimierung und echter Excel-Routenexport folgen in der nächsten Version.</div>
-    </section>
-
-    <section class="card full">
-      <h2>3. Karte</h2>
-      <div id="map"></div>
-      <div class="status" id="mapStatus">Nach dem Import werden erkannte Adressen für die Kartenansicht vorbereitet.</div>
-    </section>
-
-    <section class="card full">
-      <h2>4. Adressen</h2>
-      <div class="summary">
-        <span id="countAll">0 Adressen</span>
-        <span id="countSelected">0 ausgewählt</span>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th class="center">Auswahl</th><th>Straße</th><th>Nr.</th><th>PLZ</th><th>Ort</th><th>Originalzeile</th></tr></thead>
-          <tbody id="addressBody"><tr><td colspan="6" class="empty">Bitte zuerst eine Excel- oder CSV-Datei importieren.</td></tr></tbody>
-        </table>
-      </div>
-    </section>
-  </div>
-</main>
-
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Routenplanung</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--text:#1f2937;--muted:#64748b;--accent:#2563eb;--border:#dbe2ea;--ok:#15803d;--bad:#b91c1c}*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}header{background:#111827;color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center}header h1{margin:0;font-size:22px}.version{font-size:13px;background:#374151;padding:6px 10px;border-radius:999px}main{max-width:1500px;margin:auto;padding:20px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:0 2px 10px rgba(15,23,42,.05)}.card h2{margin:0 0 14px;font-size:18px}.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}label{display:block;font-size:13px;font-weight:700;margin-bottom:6px;color:#334155}input,button{font:inherit}input[type=text],input[type=time],input[type=number],input[type=file]{width:100%;padding:10px 11px;border:1px solid var(--border);border-radius:9px;background:#fff}button{border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer}.primary{background:var(--accent);color:#fff}.secondary{background:#e2e8f0;color:#1e293b}button:disabled{opacity:.45;cursor:not-allowed}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}#map{height:430px;border-radius:12px;background:#e5e7eb}.status{margin-top:10px;color:var(--muted);font-size:13px}.full{grid-column:1/-1}.table-wrap{overflow:auto;max-height:500px;border:1px solid var(--border);border-radius:10px}table{width:100%;border-collapse:collapse;min-width:850px}th,td{padding:10px 12px;border-bottom:1px solid #edf1f5;text-align:left;font-size:14px}th{position:sticky;top:0;background:#f8fafc;z-index:1}.center{text-align:center}.empty{padding:28px;text-align:center;color:var(--muted)}.summary{display:flex;gap:18px;flex-wrap:wrap;margin:12px 0;color:#475569;font-size:14px}.ok{color:var(--ok)}.bad{color:var(--bad)}tr.clickable{cursor:pointer}tr.clickable:hover{background:#f8fafc}@media(max-width:900px){.grid,.field-grid{grid-template-columns:1fr}.full{grid-column:auto}}
+</style></head><body>
+<header><h1>Routenplanung</h1><span class="version">v0.2</span></header><main><div class="grid">
+<section class="card"><h2>1. Import</h2><label for="fileInput">Excel / CSV Datei</label><input id="fileInput" type="file" accept=".xlsx,.xls,.csv"><div class="status" id="importStatus">Noch keine Datei geladen.</div></section>
+<section class="card"><h2>2. Planung</h2><div class="field-grid"><div><label for="startDepot">Depot Start</label><input id="startDepot" type="text" placeholder="Straße Nr., PLZ Ort"></div><div><label for="endDepot">Depot Ende</label><input id="endDepot" type="text" placeholder="Straße Nr., PLZ Ort"></div><div><label for="startTime">Startzeit</label><input id="startTime" type="time" value="07:00"></div><div><label for="stopMinutes">Stoppzeit je Standort (Min.)</label><input id="stopMinutes" type="number" min="0" step="5" value="20"></div></div><div class="actions"><button class="primary" id="planBtn" disabled>Route planen</button><button class="secondary" id="replanBtn" disabled>Route neu planen</button><button class="secondary" id="exportBtn" disabled>Excel erstellen</button></div><div class="status">v0.2 zeigt importierte Standorte auf der Karte. Routenoptimierung folgt als nächster Schritt.</div></section>
+<section class="card full"><h2>3. Karte</h2><div id="map"></div><div class="status" id="mapStatus">Nach dem Import werden die Adressen nacheinander gesucht und auf der Karte markiert.</div></section>
+<section class="card full"><h2>4. Adressen</h2><div class="summary"><span id="countAll">0 Adressen</span><span id="countSelected">0 ausgewählt</span><span id="countMapped">0 auf Karte</span></div><div class="table-wrap"><table><thead><tr><th class="center">Auswahl</th><th>Straße</th><th>Nr.</th><th>PLZ</th><th>Ort</th><th>Karte</th><th>Originalzeile</th></tr></thead><tbody id="addressBody"><tr><td colspan="7" class="empty">Bitte zuerst eine Excel- oder CSV-Datei importieren.</td></tr></tbody></table></div></section>
+</div></main>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-const state={rows:[],addresses:[]};
-const map=L.map('map').setView([48.2082,16.3738],7);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(map);
-const markers=L.layerGroup().addTo(map);
-
-const aliases={
-  street:['straße','strasse','street','adresse','anschrift','standortadresse','str'],
-  number:['hausnummer','hausnr','nummer','nr','housenumber'],
-  zip:['plz','postleitzahl','zip','postalcode'],
-  city:['ort','stadt','gemeinde','city','location']
-};
-const norm=s=>String(s??'').trim().toLowerCase().replace(/[ä]/g,'a').replace(/[ö]/g,'o').replace(/[ü]/g,'u').replace(/ß/g,'ss').replace(/[^a-z0-9]/g,'');
-function findKey(keys,list){return keys.find(k=>list.some(a=>norm(k)===norm(a)||norm(k).includes(norm(a))))}
-function splitStreetNumber(value){
-  const s=String(value??'').trim();
-  const m=s.match(/^(.*?)[,\s]+(\d+[a-zA-Z]?(?:[\/\-]\d+[a-zA-Z]?)?)$/);
-  return m?[m[1].trim(),m[2].trim()]:[s,''];
-}
-function parseRows(rows){
-  if(!rows.length)return[];
-  const keys=Object.keys(rows[0]||{});
-  const sk=findKey(keys,aliases.street), nk=findKey(keys,aliases.number), zk=findKey(keys,aliases.zip), ck=findKey(keys,aliases.city);
-  return rows.map((r,i)=>{
-    let street=sk?String(r[sk]??'').trim():'', num=nk?String(r[nk]??'').trim():'';
-    if(street&&!num){const p=splitStreetNumber(street);street=p[0];num=p[1];}
-    return {selected:true,street,num,zip:zk?String(r[zk]??'').trim():'',city:ck?String(r[ck]??'').trim():'',original:i+2};
-  }).filter(a=>a.street||a.zip||a.city);
-}
-function render(){
-  const body=document.getElementById('addressBody'); body.innerHTML='';
-  if(!state.addresses.length){body.innerHTML='<tr><td colspan="6" class="empty">Keine verwertbaren Adressen erkannt.</td></tr>';}
-  state.addresses.forEach((a,i)=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td class="center"><input type="checkbox" ${a.selected?'checked':''} data-i="${i}"></td><td>${esc(a.street)}</td><td>${esc(a.num)}</td><td>${esc(a.zip)}</td><td>${esc(a.city)}</td><td>${a.original}</td>`;
-    body.appendChild(tr);
-  });
-  body.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.addEventListener('change',e=>{state.addresses[+e.target.dataset.i].selected=e.target.checked;updateCounts();}));
-  updateCounts();
-  document.getElementById('planBtn').disabled=!state.addresses.length;
-}
-function updateCounts(){
-  document.getElementById('countAll').textContent=`${state.addresses.length} Adressen`;
-  document.getElementById('countSelected').textContent=`${state.addresses.filter(a=>a.selected).length} ausgewählt`;
-}
-function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
-
-document.getElementById('fileInput').addEventListener('change',async e=>{
-  const file=e.target.files[0]; if(!file)return;
-  document.getElementById('importStatus').textContent='Datei wird eingelesen …';
-  try{
-    const data=await file.arrayBuffer();
-    const wb=XLSX.read(data,{type:'array'});
-    const ws=wb.Sheets[wb.SheetNames[0]];
-    const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
-    state.rows=rows; state.addresses=parseRows(rows); render();
-    document.getElementById('importStatus').textContent=`${rows.length} Datenzeilen gelesen, ${state.addresses.length} mögliche Adressen erkannt.`;
-    document.getElementById('mapStatus').textContent='v0.1: Kartenbasis bereit. Geocodierung und Routenlinie folgen in der nächsten Ausbaustufe.';
-  }catch(err){
-    document.getElementById('importStatus').textContent='Import fehlgeschlagen: '+err.message;
-  }
-});
-
-document.getElementById('planBtn').addEventListener('click',()=>{
-  document.getElementById('replanBtn').disabled=false;
-  document.getElementById('exportBtn').disabled=false;
-  alert(`Vorschau vorbereitet: ${state.addresses.filter(a=>a.selected).length} Standorte ausgewählt. Die echte Routenoptimierung folgt in v0.2.`);
-});
-document.getElementById('replanBtn').addEventListener('click',()=>document.getElementById('planBtn').click());
-document.getElementById('exportBtn').addEventListener('click',()=>alert('Der finale Excel-Routenexport wird in einer folgenden Version aktiviert.'));
-</script>
-</body>
-</html>
+const state={rows:[],addresses:[],geocoding:false};const map=L.map('map').setView([48.2082,16.3738],7);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(map);const markers=L.layerGroup().addTo(map);const markerByIndex={};
+const aliases={street:['straße','strasse','street','adresse','anschrift','standortadresse','str','address'],number:['hausnummer','hausnr','nummer','nr','housenumber'],zip:['plz','postleitzahl','zip','postalcode'],city:['ort','stadt','gemeinde','city','location']};
+const norm=s=>String(s??'').trim().toLowerCase().replace(/ä/g,'a').replace(/ö/g,'o').replace(/ü/g,'u').replace(/ß/g,'ss').replace(/[^a-z0-9]/g,'');
+function findKey(keys,list){return keys.find(k=>list.some(a=>norm(k)===norm(a)||norm(k).includes(norm(a))))}function splitStreetNumber(v){const s=String(v??'').trim(),m=s.match(/^(.*?)[,\s]+(\d+[a-zA-Z]?(?:[\/\-]\d+[a-zA-Z]?)?)$/);return m?[m[1].trim(),m[2].trim()]:[s,'']}
+function parseRows(rows){if(!rows.length)return[];const keys=Object.keys(rows[0]||{}),sk=findKey(keys,aliases.street),nk=findKey(keys,aliases.number),zk=findKey(keys,aliases.zip),ck=findKey(keys,aliases.city);return rows.map((r,i)=>{let street=sk?String(r[sk]??'').trim():'',num=nk?String(r[nk]??'').trim():'';if(street&&!num)[street,num]=splitStreetNumber(street);return{selected:true,street,num,zip:zk?String(r[zk]??'').trim():'',city:ck?String(r[ck]??'').trim():'',original:i+2,status:'wartet',lat:null,lon:null}}).filter(a=>a.street||a.zip||a.city)}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}function query(a){return [a.street,a.num,a.zip,a.city,'Österreich'].filter(Boolean).join(' ')}
+function render(){const body=document.getElementById('addressBody');body.innerHTML='';if(!state.addresses.length)body.innerHTML='<tr><td colspan="7" class="empty">Keine verwertbaren Adressen erkannt.</td></tr>';state.addresses.forEach((a,i)=>{const tr=document.createElement('tr');tr.className=a.lat?'clickable':'';const status=a.status==='gefunden'?'<span class="ok">Gefunden</span>':a.status==='nicht gefunden'?'<span class="bad">Nicht gefunden</span>':esc(a.status);tr.innerHTML=`<td class="center"><input type="checkbox" ${a.selected?'checked':''} data-i="${i}"></td><td>${esc(a.street)}</td><td>${esc(a.num)}</td><td>${esc(a.zip)}</td><td>${esc(a.city)}</td><td>${status}</td><td>${a.original}</td>`;if(a.lat)tr.addEventListener('click',e=>{if(e.target.type!=='checkbox'){map.setView([a.lat,a.lon],17);markerByIndex[i]?.openPopup()}});body.appendChild(tr)});body.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.addEventListener('change',e=>{state.addresses[+e.target.dataset.i].selected=e.target.checked;updateCounts()}));updateCounts();document.getElementById('planBtn').disabled=!state.addresses.length}
+function updateCounts(){document.getElementById('countAll').textContent=`${state.addresses.length} Adressen`;document.getElementById('countSelected').textContent=`${state.addresses.filter(a=>a.selected).length} ausgewählt`;document.getElementById('countMapped').textContent=`${state.addresses.filter(a=>a.lat).length} auf Karte`}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function geocodeAll(){if(state.geocoding)return;state.geocoding=true;markers.clearLayers();Object.keys(markerByIndex).forEach(k=>delete markerByIndex[k]);const bounds=[];for(let i=0;i<state.addresses.length;i++){const a=state.addresses[i],q=query(a),cacheKey='geo:'+q;document.getElementById('mapStatus').textContent=`Adresse ${i+1} von ${state.addresses.length} wird gesucht …`;a.status='sucht …';render();try{let hit=JSON.parse(localStorage.getItem(cacheKey)||'null');if(!hit){const url='https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=at&q='+encodeURIComponent(q);const res=await fetch(url,{headers:{'Accept':'application/json'}});const data=await res.json();hit=data[0]?{lat:+data[0].lat,lon:+data[0].lon,display:data[0].display_name}:null;if(hit)localStorage.setItem(cacheKey,JSON.stringify(hit));await sleep(1100)}if(hit){a.lat=hit.lat;a.lon=hit.lon;a.status='gefunden';const m=L.marker([a.lat,a.lon]).bindPopup(`<b>${esc(a.street)} ${esc(a.num)}</b><br>${esc(a.zip)} ${esc(a.city)}`);m.addTo(markers);markerByIndex[i]=m;bounds.push([a.lat,a.lon])}else a.status='nicht gefunden'}catch(e){a.status='nicht gefunden'}render()}if(bounds.length)map.fitBounds(bounds,{padding:[30,30],maxZoom:15});document.getElementById('mapStatus').textContent=`Fertig: ${bounds.length} von ${state.addresses.length} Adressen auf der Karte gefunden.`;state.geocoding=false}
+document.getElementById('fileInput').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;document.getElementById('importStatus').textContent='Datei wird eingelesen …';try{const data=await file.arrayBuffer(),wb=XLSX.read(data,{type:'array'}),ws=wb.Sheets[wb.SheetNames[0]],rows=XLSX.utils.sheet_to_json(ws,{defval:''});state.rows=rows;state.addresses=parseRows(rows);render();document.getElementById('importStatus').textContent=`${rows.length} Datenzeilen gelesen, ${state.addresses.length} mögliche Adressen erkannt.`;if(state.addresses.length)geocodeAll()}catch(err){document.getElementById('importStatus').textContent='Import fehlgeschlagen: '+err.message}});
+document.getElementById('planBtn').addEventListener('click',()=>{document.getElementById('replanBtn').disabled=false;document.getElementById('exportBtn').disabled=false;alert(`${state.addresses.filter(a=>a.selected).length} Standorte ausgewählt. Die echte Fahrtrouten-Optimierung kommt in der nächsten Version.`)});document.getElementById('replanBtn').addEventListener('click',()=>document.getElementById('planBtn').click());document.getElementById('exportBtn').addEventListener('click',()=>alert('Der finale Excel-Routenexport folgt nach der Routenoptimierung.'));
+</script></body></html>
